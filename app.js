@@ -8,7 +8,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "*",
+    origin: ["https://servydoor.com", "http://localhost:4567"],
     exposedHeaders: "Auth-Token,Authorization",
   })
 );
