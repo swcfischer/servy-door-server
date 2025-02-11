@@ -1,7 +1,8 @@
 module.exports = (sequelize, DataTypes) => {
   var Book = sequelize.define("book", {
     uuid: {
-      type: DataTypes.STRING,
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
     googleId: {
