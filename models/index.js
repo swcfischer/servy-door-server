@@ -15,14 +15,14 @@ if (process.env.DATABASE_URL) {
     },
   });
 } else {
-  // sequelize = new Sequelize("stevenfischer", "stevenfischer", "", {
-  //   host: "localhost",
-  //   dialect: "postgres",
-  // });
-  sequelize = new Sequelize({
-    dialect: "sqlite",
-    storage: "db/database.sqlite",
+  sequelize = new Sequelize("stevenfischer", "stevenfischer", "", {
+    host: "localhost",
+    dialect: "postgres",
   });
+  // sequelize = new Sequelize({
+  //   dialect: "sqlite",
+  //   storage: "db/database.sqlite",
+  // });
 }
 
 const User = require("./User")(sequelize, DataTypes);
@@ -36,9 +36,10 @@ ReadingSession.belongsTo(Book, { foreignKey: "bookId" });
 
 Book.hasMany(ReadingSession, { foreignKey: "bookId" });
 
-User.sync({ force: true });
-Book.sync({ force: true });
-ReadingSession.sync({ force: true });
+User.sync({ force: true })
+  .then(() => Book.sync({ force: true }))
+  .then(() => ReadingSession.sync({ force: true }))
+  .catch((err) => console.error(err));
 
 module.exports = {
   Sequelize,
