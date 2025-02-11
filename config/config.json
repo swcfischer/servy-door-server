@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "stevenfischer",
+    "password": null,
+    "database": "stevenfischer",
+    "host": "127.0.0.1",
+    "dialect": "postgres"
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "database_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "language_learning_psql_user",
+    "password": "niaCcMYnZ5w1qUW5HSl8VYPcgrMEoNOJ",
+    "database": "language_learning_psql",
+    "host": "dpg-cg9o1o2k728sg3d1dkeg-a",
+    "dialect": "postgres"
+  }
+}
