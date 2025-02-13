@@ -55,52 +55,69 @@ router.post("/register-anon", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  const { accountName, password } = req.body;
 
-  bcrypt.hash(password, saltRounds, async function (err, hash) {
-    try {
-      const user = await models.User.findOne({
-        where: {
-          email,
-        },
-        attributes: ["email", "uuid", "status", "accountId", "password"],
-      });
-      bcrypt.compare(password, user.password, function (err, result) {
-        if (result) {
-          jwt.sign(
-            { data: user.accountId },
-            process.env.secret,
-            async (err, token) => {
-              if (err) {
-                throw Error(err.message);
-              }
-              try {
-                return res.json({
-                  token,
-                  user: {
-                    email: user.email,
-                    uuid: user.uuid,
-                  },
-                });
-              } catch (e) {
-                console.log("Registration Error", e);
-                return res.json({
-                  error: true,
-                  message: e.message,
-                });
-              }
-            }
-          );
-        }
-      });
-    } catch (e) {
-      console.log("🚀 ~ file: users.js:89 ~ e:", e);
+  try {
+    const user = await models.User.findOne({
+      where: {
+        accountName,
+      },
+      attributes: ["email", "uuid", "status", "password"],
+    });
+
+    if (!user) {
       return res.json({
         error: true,
-        message: "Email already in use",
+        message: "Account not found",
       });
     }
-  });
+
+    bcrypt.compare(password, user.password, function (err, result) {
+      if (err) {
+        return res.json({
+          error: true,
+          message: "Error comparing passwords",
+        });
+      }
+      if (result) {
+        jwt.sign(
+          { data: user.accountId },
+          process.env.secret,
+          async (err, token) => {
+            if (err) {
+              throw Error(err.message);
+            }
+            try {
+              return res.json({
+                token,
+                user: {
+                  accountName,
+                  uuid: user.uuid,
+                },
+              });
+            } catch (e) {
+              console.log("Registration Error", e);
+              return res.json({
+                error: true,
+                message: e.message,
+              });
+            }
+          }
+        );
+      } else {
+        return res.json({
+          error: true,
+          message: "Invalid password",
+        });
+      }
+    });
+  } catch (e) {
+    console.log("🚀 ~ file: users.js:89 ~ e:", e);
+    return res.json({
+      error: true,
+      message: "Email already in use",
+    });
+  }
 });
 
 // router.post("/create-account", async (req, res) => {
@@ -309,6 +326,65 @@ router.post("/login", async (req, res) => {
       }
     );
   });
+});
+
+router.post("/set-password-secret-account", async (req, res) => {
+  const { token, password, confirmPassword, secret, accountName } = req.body;
+
+  if (!password || !confirmPassword || !secret || !accountName) {
+    return res.json({
+      error: true,
+      message:
+        "Must provide password, confirmPassword, secret, and accountName",
+    });
+  }
+
+  if (password !== confirmPassword) {
+    return res.json({
+      error: true,
+      message: "Passwords do not match",
+    });
+  }
+
+  try {
+    const verified = await jwt.verify(token, process.env.secret);
+    const accountId = verified.data;
+
+    const user = await models.User.findOne({
+      where: {
+        accountId,
+      },
+    });
+
+    if (!user) {
+      return res.json({
+        error: true,
+        message: "User not found",
+      });
+    }
+
+    bcrypt.hash(password, saltRounds, async function (err, hash) {
+      if (err) {
+        throw new Error(err.message);
+      }
+
+      await user.update({
+        password: hash,
+        secret,
+        accountName,
+      });
+
+      res.json({
+        error: false,
+        message: "Password, secret, and account name have been set",
+      });
+    });
+  } catch (e) {
+    return res.json({
+      error: true,
+      message: e.message,
+    });
+  }
 });
 
 // router.get("/forgot-password", async (req, res) => {
