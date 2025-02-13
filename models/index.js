@@ -36,9 +36,9 @@ ReadingSession.belongsTo(Book, { foreignKey: "bookId" });
 
 Book.hasMany(ReadingSession, { foreignKey: "bookId" });
 
-User.sync({ force: false })
-  .then(() => Book.sync({ force: false }))
-  .then(() => ReadingSession.sync({ force: false }))
+User.sync({ force: true })
+  .then(() => Book.sync({ force: true }))
+  .then(() => ReadingSession.sync({ force: true }))
   .catch((err) => console.error(err));
 
 module.exports = {
