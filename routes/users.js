@@ -62,7 +62,7 @@ router.post("/login", async (req, res) => {
       where: {
         accountName,
       },
-      attributes: ["email", "uuid", "status", "password"],
+      attributes: ["email", "uuid", "status", "password", "accountId"],
     });
 
     if (!user) {
