@@ -41,7 +41,7 @@ Book.hasMany(ReadingSession, { foreignKey: "bookId" });
 
 User.sync({ force: false })
   .then(() => Book.sync({ force: false }))
-  .then(() => Bookmark.sync({ force: true }))
+  .then(() => Bookmark.sync({ force: false }))
   .then(() => ReadingSession.sync({ force: false }))
   .catch((err) => console.error(err));
 
