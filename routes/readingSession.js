@@ -62,6 +62,17 @@ router.post(
     } = req.body;
 
     try {
+      const book = await models.Book.findOne({
+        where: {
+          uuid: bookUuid,
+        },
+      });
+
+      if (book) {
+        book.lastUpdatedAt = new Date();
+        await book.save();
+      }
+
       const readingSession = await models.ReadingSession.findOne({
         where: {
           uuid: sessionUuid,

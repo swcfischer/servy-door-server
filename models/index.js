@@ -27,10 +27,13 @@ if (process.env.DATABASE_URL) {
 
 const User = require("./User")(sequelize, DataTypes);
 const Book = require("./Book")(sequelize, DataTypes);
+const Bookmark = require("./Bookmark")(sequelize, DataTypes);
 const ReadingSession = require("./ReadingSession")(sequelize, DataTypes);
 
 User.hasMany(Book, { foreignKey: "userId" });
+User.hasMany(Bookmark, { foreignKey: "userId" });
 Book.belongsTo(User, { foreignKey: "userId" });
+Bookmark.belongsTo(User, { foreignKey: "userId" });
 ReadingSession.belongsTo(User, { foreignKey: "userId" });
 ReadingSession.belongsTo(Book, { foreignKey: "bookId" });
 
@@ -38,6 +41,7 @@ Book.hasMany(ReadingSession, { foreignKey: "bookId" });
 
 User.sync({ force: false })
   .then(() => Book.sync({ force: false }))
+  .then(() => Bookmark.sync({ force: true }))
   .then(() => ReadingSession.sync({ force: false }))
   .catch((err) => console.error(err));
 
@@ -47,4 +51,5 @@ module.exports = {
   User,
   Book,
   ReadingSession,
+  Bookmark,
 };

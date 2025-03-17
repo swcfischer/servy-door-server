@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  var Book = sequelize.define("book", {
+  var Bookmark = sequelize.define("bookmark", {
     uuid: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
@@ -58,5 +58,5 @@ module.exports = (sequelize, DataTypes) => {
     },
   });
 
-  return Book;
+  return Bookmark;
 };

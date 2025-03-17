@@ -65,7 +65,7 @@ router.get("/user-books/:userUuid", isAuthorized, async (req, res) => {
 
   try {
     const books = await req.user.getBooks({
-      order: [["createdAt", "DESC"]],
+      order: [["lastUpdatedAt", "ASC"]],
     });
     return res.status(200).json(books);
   } catch (error) {
