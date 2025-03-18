@@ -14,10 +14,10 @@
     "dialect": "mysql"
   },
   "production": {
-    "username": "language_learning_psql_user",
-    "password": "niaCcMYnZ5w1qUW5HSl8VYPcgrMEoNOJ",
-    "database": "language_learning_psql",
-    "host": "dpg-cg9o1o2k728sg3d1dkeg-a",
+    "username": "patience_db_5wgb_user",
+    "password": "bJj3bqm0d8zuXZpVlyXLgtyyCP7C96Cw",
+    "database": "patience_db_5wgb",
+    "host": "dpg-cu9mn99u0jms73fh6j6g-a",
     "dialect": "postgres"
   }
 }
