@@ -20,12 +20,14 @@ const userRoutes = require("./routes/users");
 const bookRoutes = require("./routes/books");
 const readingSessionsRoutes = require("./routes/readingSession");
 const bookmarkRoutes = require("./routes/bookmarks");
+const funfactRoutes = require("./routes/funFacts");
 
 // app.use("/api", baseRoutes);
 app.use("/users", userRoutes);
 app.use("/books", bookRoutes);
 app.use("/reading-sessions", readingSessionsRoutes);
 app.use("/bookmarks", bookmarkRoutes);
+app.use("/fun-facts", funfactRoutes);
 
 const PORT = process.env.PORT || 8888;
 

@@ -29,10 +29,12 @@ const User = require("./User")(sequelize, DataTypes);
 const Book = require("./Book")(sequelize, DataTypes);
 const Bookmark = require("./Bookmark")(sequelize, DataTypes);
 const ReadingSession = require("./ReadingSession")(sequelize, DataTypes);
+const FunFacts = require("./FunFacts")(sequelize, DataTypes);
 
 User.hasMany(Book, { foreignKey: "userId" });
 User.hasMany(Bookmark, { foreignKey: "userId" });
 Book.belongsTo(User, { foreignKey: "userId" });
+
 Bookmark.belongsTo(User, { foreignKey: "userId" });
 ReadingSession.belongsTo(User, { foreignKey: "userId" });
 ReadingSession.belongsTo(Book, { foreignKey: "bookId" });
@@ -42,6 +44,7 @@ Book.hasMany(ReadingSession, { foreignKey: "bookId" });
 User.sync({ force: false })
   .then(() => Book.sync({ force: false }))
   .then(() => Bookmark.sync({ force: false }))
+  .then(() => FunFacts.sync({ force: false }))
   .then(() => ReadingSession.sync({ force: false }))
   .catch((err) => console.error(err));
 
@@ -52,4 +55,5 @@ module.exports = {
   Book,
   ReadingSession,
   Bookmark,
+  FunFacts,
 };
