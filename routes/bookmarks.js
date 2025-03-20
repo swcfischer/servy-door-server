@@ -68,7 +68,7 @@ router.get("/user-bookmarks/:userUuid", isAuthorized, async (req, res) => {
 
   try {
     const bookmarks = await req.user.getBookmarks({
-      order: [["createdAt", "ASC"]],
+      order: [["createdAt", "DESC"]],
     });
     return res.status(200).json(bookmarks);
   } catch (error) {
