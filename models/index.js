@@ -50,7 +50,7 @@ User.sync({ force: false })
   .then(() => Book.sync({ force: false }))
   .then(() => Bookmark.sync({ force: false }))
   .then(() => ReadingSession.sync({ force: false }))
-  .then(() => BookWordDefinition.sync({ force: true }))
+  .then(() => BookWordDefinition.sync({ force: false }))
   .catch((err) => console.error(err));
 
 module.exports = {
