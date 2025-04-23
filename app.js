@@ -20,12 +20,14 @@ const userRoutes = require("./routes/users");
 const bookRoutes = require("./routes/books");
 const readingSessionsRoutes = require("./routes/readingSession");
 const bookmarkRoutes = require("./routes/bookmarks");
+const bookWordDefinition = require("./routes/bookWordDefinition");
 
 // app.use("/api", baseRoutes);
 app.use("/users", userRoutes);
 app.use("/books", bookRoutes);
 app.use("/reading-sessions", readingSessionsRoutes);
 app.use("/bookmarks", bookmarkRoutes);
+app.use("/book-word-definition", bookWordDefinition);
 
 const PORT = process.env.PORT || 8888;
 
