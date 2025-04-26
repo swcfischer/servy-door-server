@@ -20,9 +20,9 @@ main();
 
 function formContents(word, context, bookTitle) {
   if (context) {
-    return `Give me the definition of ${word} given this context ${context}. Return HTML. Please return HTML without any unnecessary markup.`;
+    return `Give me the definition of ${word} given this context ${context}. `;
   }
-  return `Give me the definition of ${word}. Please return HTML without any unnecessary markup.`;
+  return `Give me the definition of ${word}.`;
 }
 
 router.post("/create-definition/:userUuid", isAuthorized, async (req, res) => {
@@ -64,7 +64,6 @@ router.get("/all/:userUuid/:bookUuid", isAuthorized, async (req, res) => {
       },
       order: [["createdAt", "DESC"]],
     });
-    console.log("🚀 ~ router.get ~ bookWordDefinitions:", bookWordDefinitions);
 
     return res.status(200).json(bookWordDefinitions);
   } catch (error) {
