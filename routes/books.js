@@ -113,7 +113,7 @@ router.delete("/book/:userUuid", isAuthorized, async (req, res) => {
       return res.status(404).json({ error: "Book not found" });
     }
 
-    await bookWordDefinitions.destroy({
+    await models.BookWordDefinition.destroy({
       where: {
         bookId: book.uuid,
       },
