@@ -33,6 +33,7 @@ const BookWordDefinition = require("./BookWordDefinition")(
   sequelize,
   DataTypes
 );
+const YouTubeVideo = require("./YouTubeVideo")(sequelize, DataTypes);
 
 User.hasMany(Book, { foreignKey: "userId" });
 User.hasMany(Bookmark, { foreignKey: "userId" });
@@ -43,14 +44,19 @@ ReadingSession.belongsTo(User, { foreignKey: "userId" });
 BookWordDefinition.belongsTo(User, { foreignKey: "userId" });
 BookWordDefinition.belongsTo(Book, { foreignKey: "bookId" });
 
+YouTubeVideo.belongsTo(User, { foreignKey: "userId" });
+YouTubeVideo.belongsTo(Book, { foreignKey: "bookId" });
+
 Book.hasMany(ReadingSession, { foreignKey: "bookId" });
 Book.hasMany(BookWordDefinition, { foreignKey: "bookId" });
+Book.hasMany(YouTubeVideo, { foreignKey: "bookId" });
 
 User.sync({ force: false })
   .then(() => Book.sync({ force: false }))
   .then(() => Bookmark.sync({ force: false }))
   .then(() => ReadingSession.sync({ force: false }))
   .then(() => BookWordDefinition.sync({ force: false }))
+  .then(() => YouTubeVideo.sync({ force: false }))
   .catch((err) => console.error(err));
 
 module.exports = {
@@ -61,4 +67,5 @@ module.exports = {
   ReadingSession,
   Bookmark,
   BookWordDefinition,
+  YouTubeVideo,
 };

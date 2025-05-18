@@ -5,6 +5,23 @@ const router = express.Router();
 const models = require("../models");
 const { isAuthorized } = require("./isAuthorized");
 
+const { GoogleGenAI } = require("@google/genai");
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+// * Book Summary Translation, No DB
+router.get("/translate-summary/:userUuid", isAuthorized, async (req, res) => {
+  const { summary, lang } = req.query;
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.0-flash",
+    contents: `Return only a the following text into ${lang}: ${summary}`,
+  });
+
+  const responseText = response.text;
+  return res.json({ text: responseText });
+});
+
 router.post("/create-book/:userUuid", isAuthorized, async (req, res) => {
   const {
     title,
