@@ -15,14 +15,14 @@ if (process.env.DATABASE_URL) {
     },
   });
 } else {
-  sequelize = new Sequelize("stevenfischer", "stevenfischer", "", {
-    host: "localhost",
-    dialect: "postgres",
-  });
-  // sequelize = new Sequelize({
-  //   dialect: "sqlite",
-  //   storage: "db/database.sqlite",
+  // sequelize = new Sequelize("stevenfischer", "stevenfischer", "", {
+  //   host: "localhost",
+  //   dialect: "postgres",
   // });
+  sequelize = new Sequelize({
+    dialect: "sqlite",
+    storage: "db/database.sqlite",
+  });
 }
 
 const User = require("./User")(sequelize, DataTypes);

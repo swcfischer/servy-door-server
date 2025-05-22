@@ -72,6 +72,36 @@ router.get("/all/:userUuid/:bookUuid", isAuthorized, async (req, res) => {
   }
 });
 
+router.delete(
+  "/definition/:userUuid/:wordUuid",
+  isAuthorized,
+  async (req, res) => {
+    const { userUuid, wordUuid } = req.params;
+
+    try {
+      const bookWordDefinition = await models.BookWordDefinition.findOne({
+        where: {
+          uuid: wordUuid,
+        },
+      });
+
+      if (!bookWordDefinition) {
+        return res.status(404).json({ error: "Definition not found" });
+      }
+
+      await bookWordDefinition.destroy();
+
+      return res.status(200).json({
+        message: "Deleted successfully",
+        bookWordDefinition,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+);
+
 // router.post(
 //   "/save-reading-session/:userUuid/:bookUuid",
 //   isAuthorized,
