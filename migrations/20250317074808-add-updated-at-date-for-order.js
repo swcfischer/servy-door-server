@@ -9,10 +9,15 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.addColumn("books", "lastUpdatedAt", {
-      type: Sequelize.DATE,
-      allowNull: true,
-    });
+    const tableDescription = await queryInterface.describeTable("books");
+
+    // Only add the column if it doesn't exist
+    if (!tableDescription.lastUpdatedAt) {
+      await queryInterface.addColumn("books", "lastUpdatedAt", {
+        type: Sequelize.DATE,
+        allowNull: true,
+      });
+    }
   },
 
   async down(queryInterface, Sequelize) {
@@ -22,6 +27,11 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.removeColumn("books", "lastUpdatedAt");
+    const tableDescription = await queryInterface.describeTable("books");
+
+    // Only remove the column if it exists
+    if (tableDescription.lastUpdatedAt) {
+      await queryInterface.removeColumn("books", "lastUpdatedAt");
+    }
   },
 };

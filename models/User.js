@@ -39,6 +39,28 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       defaultValue: userStatuses.anonymous,
     },
+
+    // Google OAuth fields
+    googleId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
+    },
+
+    avatar: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+
+    googleAccessToken: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+
+    googleRefreshToken: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
   });
 
   return User;

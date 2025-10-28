@@ -250,81 +250,40 @@ router.get("/current_user", async (req, res) => {
 
   const token = authorization.split(" ")[1];
 
-  try {
-    const verified = await jwt.verify(token, process.env.secret);
-    // ! this is the user's id
-    // ! I'm not sure if I want req.user
-    // ! or if I want to do it through the client via the redux store
+  jwt.verify(token, process.env.secret, async (err, verified) => {
+    if (err) {
+      console.log("JWT verification error:", err);
+      return res.json({
+        error: true,
+        message: err.message,
+        currentUser: null,
+      });
+    }
 
-    if (verified) {
+    try {
       const user = await models.User.findOne({
         where: {
           accountId: verified.data,
         },
-        attributes: ["uuid", "email", "status"],
+        attributes: [
+          "uuid",
+          "email",
+          "status",
+          "accountName",
+          "avatar",
+          "googleId",
+        ],
       });
 
       return res.json({ currentUser: user });
-    } else {
-      res.json({ currentUser: null });
-    }
-  } catch (err) {
-    console.log(err);
-    return res.json({
-      error: true,
-      message: err.message,
-      currentUser: null,
-    });
-  }
-});
-
-router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-
-  const user = await models.User.findOne({
-    where: {
-      email,
-    },
-    attributes: ["uuid", "confirmed", "email", "password"],
-  });
-
-  if (!user) {
-    return res.json({
-      error: true,
-      message: "Email or password was incorrect",
-    });
-  }
-  if (!user.confirmed) {
-    return res.json({
-      error: true,
-      message: "You must verify your email before you login",
-    });
-  }
-  bcrypt.compare(password, user.password, (err, result) => {
-    if (err || !result) {
+    } catch (err) {
+      console.log("Database error:", err);
       return res.json({
         error: true,
-        message: "Email or password was incorrect",
+        message: err.message,
+        currentUser: null,
       });
     }
-
-    // ! set expiration on jwt
-    jwt.sign(
-      { data: user.uuid },
-      process.env.secret,
-      { expiresIn: "365d" },
-      (err, token) => {
-        console.log(err);
-        res.set("Auth-Token", token);
-        return res.json({
-          currentUser: {
-            email: user.email,
-            uuid: user.uuid,
-            confirmed: user.confirmed,
-          },
-        });
-      }
-    );
   });
 });
 
