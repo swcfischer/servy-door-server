@@ -19,13 +19,20 @@ router.get(
 // Google OAuth callback
 router.get(
   "/google/callback",
-  passport.authenticate("google", { session: false }),
+  passport.authenticate("google", { failureRedirect: "/" }),
   (req, res) => {
     try {
-      // Generate JWT token
+      console.log(
+        "Dev OAuth callback - User:",
+        req.user ? "Found" : "Not found"
+      );
+
+      // Generate JWT token for Google OAuth users
       const token = jwt.sign({ data: req.user.accountId }, process.env.secret, {
         expiresIn: "365d",
       });
+
+      console.log("Dev OAuth callback - Token generated");
 
       // Redirect to frontend with token
       const frontendURL =
@@ -49,10 +56,7 @@ router.get(
 // Google OAuth redirect endpoint (production)
 router.get(
   "/redirect",
-  passport.authenticate("google", {
-    session: false,
-    failureRedirect: "/auth-callback?error=google_auth_failed",
-  }),
+  passport.authenticate("google", { failureRedirect: "/" }),
   (req, res) => {
     try {
       console.log("OAuth redirect - User:", req.user ? "Found" : "Not found");
@@ -67,13 +71,18 @@ router.get(
       }
 
       console.log("OAuth redirect - AccountId:", req.user.accountId);
+      console.log(
+        "OAuth redirect - User data:",
+        JSON.stringify(req.user, null, 2)
+      );
 
-      // Generate JWT token
+      // Generate JWT token for Google OAuth users
       const token = jwt.sign({ data: req.user.accountId }, process.env.secret, {
         expiresIn: "365d",
       });
 
       console.log("OAuth redirect - Token generated successfully");
+      console.log("OAuth redirect - Token length:", token.length);
 
       // Redirect to frontend with token
       const frontendURL =
