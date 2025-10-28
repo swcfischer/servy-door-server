@@ -49,13 +49,31 @@ router.get(
 // Google OAuth redirect endpoint (production)
 router.get(
   "/redirect",
-  passport.authenticate("google", { session: false }),
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: "/auth-callback?error=google_auth_failed",
+  }),
   (req, res) => {
     try {
+      console.log("OAuth redirect - User:", req.user ? "Found" : "Not found");
+
+      if (!req.user) {
+        console.error("No user returned from Google OAuth");
+        const frontendURL =
+          process.env.NODE_ENV === "production"
+            ? "https://servydoor.com"
+            : "http://localhost:4567";
+        return res.redirect(`${frontendURL}/auth-callback?error=no_user`);
+      }
+
+      console.log("OAuth redirect - AccountId:", req.user.accountId);
+
       // Generate JWT token
       const token = jwt.sign({ data: req.user.accountId }, process.env.secret, {
         expiresIn: "365d",
       });
+
+      console.log("OAuth redirect - Token generated successfully");
 
       // Redirect to frontend with token
       const frontendURL =

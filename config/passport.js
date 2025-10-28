@@ -14,6 +14,12 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+        console.log("Google OAuth callback - Profile ID:", profile.id);
+        console.log(
+          "Google OAuth callback - Email:",
+          profile.emails?.[0]?.value
+        );
+
         // Check if user already exists with this Google ID
         let existingUser = await models.User.findOne({
           where: {
@@ -22,6 +28,7 @@ passport.use(
         });
 
         if (existingUser) {
+          console.log("Existing user found with Google ID:", existingUser.uuid);
           // Update tokens
           const updatedUser = await existingUser.update({
             googleAccessToken: accessToken,
@@ -39,6 +46,10 @@ passport.use(
         });
 
         if (existingEmailUser) {
+          console.log(
+            "Existing user found with email:",
+            existingEmailUser.uuid
+          );
           // Link Google account to existing user
           const updatedUser = await existingEmailUser.update({
             googleId: profile.id,
@@ -50,6 +61,7 @@ passport.use(
         }
 
         // Create new user
+        console.log("Creating new user for Google ID:", profile.id);
         const newUser = await models.User.create({
           googleId: profile.id,
           email: profile.emails[0].value,
@@ -61,8 +73,10 @@ passport.use(
           googleRefreshToken: refreshToken,
         });
 
+        console.log("New user created:", newUser.uuid);
         return done(null, newUser);
       } catch (error) {
+        console.error("Google OAuth callback error:", error);
         return done(error, null);
       }
     }

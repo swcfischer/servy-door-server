@@ -250,9 +250,20 @@ router.get("/current_user", async (req, res) => {
 
   const token = authorization.split(" ")[1];
 
+  console.log("Current user - Token received:", token ? "Yes" : "No");
+  console.log("Current user - Token length:", token?.length);
+  console.log(
+    "Current user - Secret exists:",
+    process.env.secret ? "Yes" : "No"
+  );
+
   jwt.verify(token, process.env.secret, async (err, verified) => {
     if (err) {
       console.log("JWT verification error:", err);
+      console.log(
+        "JWT verification - Token first 20 chars:",
+        token?.substring(0, 20)
+      );
       return res.json({
         error: true,
         message: err.message,
