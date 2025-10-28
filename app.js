@@ -6,6 +6,9 @@ const bodyParser = require("body-parser");
 const session = require("express-session");
 const passport = require("passport");
 
+// Initialize passport configuration
+require("./config/passport");
+
 const app = express();
 
 app.use(

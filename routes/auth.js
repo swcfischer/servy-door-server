@@ -10,7 +10,9 @@ require("../config/passport");
 router.get(
   "/google",
   passport.authenticate("google", {
-    scope: ["profile", "email"],
+    scope: ["profile", "email", "https://www.googleapis.com/auth/books"],
+    accessType: "offline",
+    prompt: "consent",
   })
 );
 

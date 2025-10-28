@@ -11,9 +11,6 @@ passport.use(
         process.env.NODE_ENV === "production"
           ? `${process.env.SERVER_URL}/redirect`
           : "http://localhost:8888/auth/google/callback",
-      scope: ["profile", "email", "https://www.googleapis.com/auth/books"],
-      accessType: "offline",
-      prompt: "consent",
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
