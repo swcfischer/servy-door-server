@@ -2,6 +2,8 @@ const express = require("express");
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
+const { getValidGoogleToken } = require("../util/refreshGoogleToken");
+const { isAuthorized } = require("./isAuthorized");
 
 // Initialize passport config
 require("../config/passport");
@@ -175,6 +177,44 @@ router.post("/unlink-google", async (req, res) => {
     return res.json({
       error: true,
       message: "Failed to unlink Google account",
+    });
+  }
+});
+
+// Validate and refresh Google OAuth token
+router.post("/validate-google-token", isAuthorized, async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (!user.googleId) {
+      return res.status(400).json({
+        error: "No Google account linked",
+        message: "User has not authenticated with Google",
+        requiresAuth: true,
+      });
+    }
+
+    // Try to get a valid token (will refresh if needed)
+    const accessToken = await getValidGoogleToken(user);
+
+    if (!accessToken) {
+      return res.status(401).json({
+        error: "Token invalid",
+        message: "Google authentication expired. Please sign in again.",
+        requiresReauth: true,
+      });
+    }
+
+    return res.json({
+      valid: true,
+      message: "Google token is valid",
+      hasGoogleAccess: true,
+    });
+  } catch (error) {
+    console.error("Token validation error:", error);
+    return res.status(500).json({
+      error: "Validation failed",
+      message: "Unable to validate Google token",
     });
   }
 });
