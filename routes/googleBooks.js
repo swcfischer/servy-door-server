@@ -20,7 +20,7 @@ router.get("/search/:userUuid", isAuthorized, async (req, res) => {
       : {};
 
     const response = await axios.get(
-      `https://www.googleapis.com/books/v1/volumes?${queryParams}`,
+      `https://www.googleapis.com/books/v1/volumes?${queryParams}&orderBy=relevance`,
       { headers }
     );
 
