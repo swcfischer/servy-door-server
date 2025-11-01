@@ -25,7 +25,7 @@ router.get("/search/:userUuid", isAuthorized, async (req, res) => {
 
     // Make request to Google Books API with valid token
     const response = await axios.get(
-      `https://www.googleapis.com/books/v1/volumes?${queryParams}&orderBy=relevance`,
+      `https://www.googleapis.com/books/v1/volumes?${queryParams}&orderBy=relevance&filter=full&printType=books`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
