@@ -140,4 +140,85 @@ router.get("/volume/:userUuid/:volumeId", isAuthorized, async (req, res) => {
   }
 });
 
+// Search YouTube videos related to a book or topic
+router.get("/youtube-search/:userUuid", isAuthorized, async (req, res) => {
+  try {
+    const { q, maxResults = 5 } = req.query;
+
+    if (!q) {
+      return res.status(400).json({
+        error: "Missing query parameter",
+        message: "Please provide a search query 'q' parameter",
+      });
+    }
+
+    const apiKey = process.env.YOUTUBE_API_KEY;
+
+    if (!apiKey) {
+      return res.status(500).json({
+        error: "YouTube API not configured",
+        message: "YouTube API key is not available",
+      });
+    }
+
+    // Search for videos using YouTube Data API v3
+    const response = await axios.get(
+      "https://www.googleapis.com/youtube/v3/search",
+      {
+        params: {
+          part: "snippet",
+          q: q,
+          type: "video",
+          maxResults: Math.min(parseInt(maxResults), 25), // YouTube API limit is 50, we'll cap at 25
+          order: "relevance",
+          key: apiKey,
+        },
+      }
+    );
+
+    // Transform the response to return only title and channel (author)
+    const videos = response.data.items.map((item) => ({
+      videoId: item.id.videoId,
+      title: item.snippet.title,
+      author: item.snippet.channelTitle,
+      description: item.snippet.description,
+      thumbnail:
+        item.snippet.thumbnails.medium?.url ||
+        item.snippet.thumbnails.default?.url,
+      publishedAt: item.snippet.publishedAt,
+      url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+    }));
+
+    return res.json({
+      query: q,
+      totalResults: response.data.pageInfo.totalResults,
+      resultsPerPage: response.data.pageInfo.resultsPerPage,
+      videos: videos,
+    });
+  } catch (error) {
+    console.error("YouTube API error:", error.response?.data || error.message);
+
+    // Handle rate limiting
+    if (error.response?.status === 429) {
+      return res.status(429).json({
+        error: "Rate limit exceeded",
+        message: "Too many requests to YouTube API. Please try again later.",
+      });
+    }
+
+    // Handle quota exceeded
+    if (error.response?.status === 403) {
+      return res.status(403).json({
+        error: "YouTube API quota exceeded",
+        message: "Daily quota for YouTube API has been exceeded.",
+      });
+    }
+
+    return res.status(error.response?.status || 500).json({
+      error: "YouTube search failed",
+      message: error.response?.data?.error?.message || error.message,
+    });
+  }
+});
+
 module.exports = router;
