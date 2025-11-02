@@ -3,6 +3,9 @@ const router = express.Router();
 const axios = require("axios");
 const { isAuthorized } = require("./isAuthorized");
 const { getValidGoogleToken } = require("../util/refreshGoogleToken");
+const { GoogleGenAI } = require("@google/genai");
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // Proxy Google Books API requests with user's OAuth token
 router.get("/search/:userUuid", isAuthorized, async (req, res) => {
@@ -89,6 +92,17 @@ router.get("/volume/:userUuid/:volumeId", isAuthorized, async (req, res) => {
         },
       }
     );
+
+    const description = response.data.volumeInfo.description;
+
+    // Get a summary from Google's Gemini API
+    const geminiResponse = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: `Please provide in a concise paragraph summary of this book description (do not include title and author): ${description}`,
+    });
+
+    const summary = geminiResponse.text;
+    response.data.volumeInfo.aiSummary = summary;
 
     return res.json(response.data);
   } catch (error) {
