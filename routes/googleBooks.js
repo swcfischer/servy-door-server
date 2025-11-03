@@ -96,13 +96,15 @@ router.get("/volume/:userUuid/:volumeId", isAuthorized, async (req, res) => {
     const description = response.data.volumeInfo.description;
 
     // Get a summary from Google's Gemini API
-    const geminiResponse = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: `Please provide in a concise paragraph summary of this book description (do not include title and author): ${description}`,
-    });
+    // const geminiResponse = await ai.models.generateContent({
+    //   model: "gemini-2.0-flash",
+    //   contents: `Please provide in a concise paragraph summary of this book description (do not include title and author): ${description}`,
+    // });
 
-    const summary = geminiResponse.text;
-    response.data.volumeInfo.aiSummary = summary;
+    // const summary = geminiResponse.text;
+    // response.data.volumeInfo.aiSummary = summary;
+    // ! just doing the description
+    response.data.volumeInfo.aiSummary = description;
 
     return res.json(response.data);
   } catch (error) {
