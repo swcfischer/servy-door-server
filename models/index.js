@@ -34,6 +34,10 @@ const BookWordDefinition = require("./BookWordDefinition")(
   DataTypes
 );
 const YouTubeVideo = require("./YouTubeVideo")(sequelize, DataTypes);
+const YouTubeSearchCache = require("./YouTubeSearchCache")(
+  sequelize,
+  DataTypes
+);
 
 User.hasMany(Book, { foreignKey: "userId" });
 User.hasMany(Bookmark, { foreignKey: "userId" });
@@ -57,6 +61,7 @@ User.sync({ force: false })
   .then(() => ReadingSession.sync({ force: false }))
   .then(() => BookWordDefinition.sync({ force: false }))
   .then(() => YouTubeVideo.sync({ force: false }))
+  .then(() => YouTubeSearchCache.sync({ force: false }))
   .catch((err) => console.error(err));
 
 module.exports = {
@@ -68,4 +73,5 @@ module.exports = {
   Bookmark,
   BookWordDefinition,
   YouTubeVideo,
+  YouTubeSearchCache,
 };

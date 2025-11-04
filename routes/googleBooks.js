@@ -4,6 +4,13 @@ const axios = require("axios");
 const { isAuthorized } = require("./isAuthorized");
 const { getValidGoogleToken } = require("../util/refreshGoogleToken");
 const { GoogleGenAI } = require("@google/genai");
+const { YouTubeSearchCache } = require("../models");
+const { Op } = require("sequelize");
+const {
+  cleanupExpiredCache,
+  getCacheStats,
+  clearCacheByPattern,
+} = require("../util/youtubeCacheManager");
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -157,6 +164,32 @@ router.get("/youtube-search/:userUuid", isAuthorized, async (req, res) => {
       });
     }
 
+    // Normalize the query for consistent caching
+    const normalizedQuery = q.toLowerCase().trim();
+
+    // Check cache first
+    const cachedResult = await YouTubeSearchCache.findOne({
+      where: {
+        query: normalizedQuery,
+        expiresAt: {
+          [Op.gt]: new Date(),
+        },
+      },
+    });
+
+    if (cachedResult) {
+      console.log(`Cache hit for YouTube search: "${normalizedQuery}"`);
+      return res.json({
+        query: q,
+        totalResults: cachedResult.totalResults,
+        resultsPerPage: cachedResult.resultsPerPage,
+        videos: cachedResult.results,
+        cached: true,
+      });
+    }
+
+    console.log(`Cache miss for YouTube search: "${normalizedQuery}"`);
+
     const apiKey = process.env.YOUTUBE_API_KEY;
 
     if (!apiKey) {
@@ -194,11 +227,33 @@ router.get("/youtube-search/:userUuid", isAuthorized, async (req, res) => {
       url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
     }));
 
+    // Cache the results for 24 hours
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    try {
+      await YouTubeSearchCache.upsert({
+        query: normalizedQuery,
+        results: videos,
+        totalResults: response.data.pageInfo.totalResults,
+        resultsPerPage: response.data.pageInfo.resultsPerPage,
+        expiresAt: expiresAt,
+      });
+      console.log(`Cached YouTube search results for: "${normalizedQuery}"`);
+    } catch (cacheError) {
+      console.error(
+        "Failed to cache YouTube search results:",
+        cacheError.message
+      );
+      // Don't fail the request if caching fails
+    }
+
     return res.json({
       query: q,
       totalResults: response.data.pageInfo.totalResults,
       resultsPerPage: response.data.pageInfo.resultsPerPage,
       videos: videos,
+      cached: false,
     });
   } catch (error) {
     console.error("YouTube API error:", error.response?.data || error.message);
@@ -225,5 +280,72 @@ router.get("/youtube-search/:userUuid", isAuthorized, async (req, res) => {
     });
   }
 });
+
+// Cache management routes
+router.get("/youtube-cache/stats/:userUuid", isAuthorized, async (req, res) => {
+  try {
+    const stats = await getCacheStats();
+    return res.json(stats);
+  } catch (error) {
+    console.error("Error getting cache stats:", error.message);
+    return res.status(500).json({
+      error: "Failed to get cache stats",
+      message: error.message,
+    });
+  }
+});
+
+router.delete(
+  "/youtube-cache/cleanup/:userUuid",
+  isAuthorized,
+  async (req, res) => {
+    try {
+      const deletedCount = await cleanupExpiredCache();
+      return res.json({
+        message: "Cache cleanup completed",
+        deletedCount,
+      });
+    } catch (error) {
+      console.error("Error cleaning up cache:", error.message);
+      return res.status(500).json({
+        error: "Failed to cleanup cache",
+        message: error.message,
+      });
+    }
+  }
+);
+
+router.delete(
+  "/youtube-cache/clear/:userUuid",
+  isAuthorized,
+  async (req, res) => {
+    try {
+      const { pattern } = req.query;
+      let deletedCount;
+
+      if (pattern) {
+        deletedCount = await clearCacheByPattern(pattern);
+      } else {
+        deletedCount = await YouTubeSearchCache.destroy({
+          where: {},
+          truncate: true,
+        });
+      }
+
+      return res.json({
+        message: pattern
+          ? `Cache cleared for pattern: ${pattern}`
+          : "All cache cleared",
+        deletedCount,
+      });
+    } catch (error) {
+      console.error("Error clearing cache:", error.message);
+      return res.status(500).json({
+        error: "Failed to clear cache",
+        message: error.message,
+      });
+    }
+  }
+);
 
 module.exports = router;
