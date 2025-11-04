@@ -106,6 +106,7 @@ router.get("/volume/:userUuid/:volumeId", isAuthorized, async (req, res) => {
       response.data.volumeInfo.aiSummary = summary;
     } catch (err) {
       console.error(err.message);
+      response.data.volumeInfo.aiSummary = description;
     } finally {
       return res.json(response.data);
     }
