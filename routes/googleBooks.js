@@ -19,28 +19,12 @@ router.get("/search/:userUuid", isAuthorized, async (req, res) => {
   try {
     const user = req.user;
 
-    // Get a valid Google access token (refresh if needed)
-    const accessToken = await getValidGoogleToken(user);
-
-    if (!accessToken) {
-      return res.status(401).json({
-        error: "Token unavailable",
-        message: "Please re-authenticate with Google",
-        requiresReauth: true,
-      });
-    }
-
     // Build the query string from request query params
     const queryParams = new URLSearchParams(req.query).toString();
 
     // Make request to Google Books API with valid token
     const response = await axios.get(
-      `https://www.googleapis.com/books/v1/volumes?${queryParams}&orderBy=relevance`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
+      `https://www.googleapis.com/books/v1/volumes?${queryParams}&orderBy=relevance`
     );
 
     return res.json(response.data);
@@ -80,43 +64,11 @@ router.get("/volume/:userUuid/:volumeId", isAuthorized, async (req, res) => {
     const user = req.user;
     const { volumeId } = req.params;
 
-    // Get a valid Google access token (refresh if needed)
-    const accessToken = await getValidGoogleToken(user);
-
-    if (!accessToken) {
-      return res.status(401).json({
-        error: "Token unavailable",
-        message: "Please re-authenticate with Google",
-        requiresReauth: true,
-      });
-    }
-
     const response = await axios.get(
-      `https://www.googleapis.com/books/v1/volumes/${volumeId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
+      `https://www.googleapis.com/books/v1/volumes/${volumeId}`
     );
 
-    const description = response.data.volumeInfo.description;
-
-    try {
-      // Get a summary from Google's Gemini API
-      const geminiResponse = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: `Please provide in a concise paragraph summary of this book description (do not include title and author): ${description}`,
-      });
-
-      const summary = geminiResponse.text;
-      response.data.volumeInfo.aiSummary = summary;
-    } catch (err) {
-      console.error(err.message);
-      response.data.volumeInfo.aiSummary = description;
-    } finally {
-      return res.json(response.data);
-    }
+    return res.json(response.data);
   } catch (error) {
     console.error(
       "Google Books API error:",
