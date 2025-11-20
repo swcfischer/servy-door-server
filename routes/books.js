@@ -147,6 +147,83 @@ router.get("/translate-summary/:userUuid", isAuthorized, async (req, res) => {
   return res.json({ text: responseText });
 });
 
+// Summarize a Google Books description (no DB write)
+router.post(
+  "/summarize-description/:userUuid",
+  isAuthorized,
+  async (req, res) => {
+    const { userUuid } = req.params;
+    const { descriptionHtml = "", googleVolumeId } = req.body;
+
+    try {
+      if (req.user.uuid !== userUuid) {
+        return res
+          .status(403)
+          .json({ error: "User mismatch - not authorized" });
+      }
+
+      if (!descriptionHtml.trim()) {
+        return res.status(400).json({ error: "Missing descriptionHtml" });
+      }
+
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(500).json({
+          error: "Gemini not configured",
+          message: "GEMINI_API_KEY env var missing",
+        });
+      }
+
+      // Basic sanitize: strip HTML tags
+      const plain = descriptionHtml
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/<style[\s\S]*?<\/style>/gi, "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&nbsp;/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      // Clamp length to avoid excessive token usage
+      const maxLen = 6000;
+      const truncated = plain.length > maxLen ? plain.slice(0, maxLen) : plain;
+
+      let summaryText = "";
+      try {
+        const prompt = `Summarize the following book description into 2-4 concise sentences focusing on the premise and themes without spoilers. Keep it neutral and informative.\n\nDESCRIPTION:\n${truncated}`;
+        const response = await ai.models.generateContent({
+          model: "gemini-2.0-flash",
+          contents: prompt,
+        });
+        summaryText = (response.text || "").trim();
+      } catch (modelError) {
+        console.error(
+          "Gemini summarization failed, falling back:",
+          modelError.message
+        );
+        // Fallback simple heuristic: first 3 sentences
+        const sentences = truncated
+          .match(/[^.!?]+[.!?]?/g)
+          ?.map((s) => s.trim()) || [truncated];
+        summaryText =
+          sentences.slice(0, 3).join(" ") +
+          (sentences.length > 3 ? " ..." : "");
+      }
+
+      // Final clean
+      summaryText = summaryText.replace(/\s+/g, " ").trim();
+
+      return res.json({
+        summary: summaryText,
+        sourceLength: plain.length,
+        truncated: plain.length > maxLen,
+        googleVolumeId: googleVolumeId || null,
+      });
+    } catch (err) {
+      console.error("Summarize description error:", err);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+  }
+);
+
 router.post("/create-book/:userUuid", isAuthorized, async (req, res) => {
   const {
     title,
