@@ -18,20 +18,28 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 router.get("/search/:userUuid", isAuthorized, async (req, res) => {
   try {
     const user = req.user;
+    console.log("🚀 ~ user:", user);
+
+    if (!user.googleId && !user.googleAccessToken && !user.googleRefreshToken) {
+      return res.status(401).json({
+        error: "Authentication failed",
+        message: "Please authenticate with Google",
+      });
+    }
 
     // Build the query string from request query params
     const queryParams = new URLSearchParams(req.query).toString();
 
     // Make request to Google Books API with valid token
     const response = await axios.get(
-      `https://www.googleapis.com/books/v1/volumes?${queryParams}&orderBy=relevance`
+      `https://www.googleapis.com/books/v1/volumes?${queryParams}&orderBy=relevance`,
     );
 
     return res.json(response.data);
   } catch (error) {
     console.error(
       "Google Books API error:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
 
     // If still getting 401 after token refresh, user needs to re-authenticate
@@ -65,14 +73,14 @@ router.get("/volume/:userUuid/:volumeId", isAuthorized, async (req, res) => {
     const { volumeId } = req.params;
 
     const response = await axios.get(
-      `https://www.googleapis.com/books/v1/volumes/${volumeId}`
+      `https://www.googleapis.com/books/v1/volumes/${volumeId}`,
     );
 
     return res.json(response.data);
   } catch (error) {
     console.error(
       "Google Books API error:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
 
     if (error.response?.status === 401) {
@@ -163,7 +171,7 @@ router.get("/youtube-search/:userUuid", isAuthorized, async (req, res) => {
           order: "relevance",
           key: apiKey,
         },
-      }
+      },
     );
 
     // Transform the response to return only title and channel (author)
@@ -195,7 +203,7 @@ router.get("/youtube-search/:userUuid", isAuthorized, async (req, res) => {
     } catch (cacheError) {
       console.error(
         "Failed to cache YouTube search results:",
-        cacheError.message
+        cacheError.message,
       );
       // Don't fail the request if caching fails
     }
@@ -264,7 +272,7 @@ router.delete(
         message: error.message,
       });
     }
-  }
+  },
 );
 
 router.delete(
@@ -297,7 +305,7 @@ router.delete(
         message: error.message,
       });
     }
-  }
+  },
 );
 
 module.exports = router;
